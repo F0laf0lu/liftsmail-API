@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # 3rd party app
     'djoser',
     'rest_framework',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

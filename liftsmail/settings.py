@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'account.apps.AccountConfig',
+    'emailcontacts.apps.EmailcontactsConfig',
 
     # 3rd party app
     'djoser',

@@ -31,6 +31,9 @@ class ContactListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
 
     def get_group(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return None
+        
         group_id = self.kwargs['pk']
         group = get_object_or_404(Group, id=group_id)
         self.check_object_permissions(self.request, group)
@@ -52,17 +55,26 @@ class ContactListCreateView(generics.ListCreateAPIView):
 
 # view a contact detail
 class ContactDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Contact.objects.all()
     serializer_class = ContactSerializer
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
     def get_object(self):
-        group_id = self.kwargs['group_id']
-        contact_id = self.kwargs['pk']
+        # Short-circuit for schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return None
+        
+        group_id = self.kwargs.get('group_id')
+        contact_id = self.kwargs.get('pk')
+        
+        if not group_id or not contact_id:
+            raise KeyError("Missing 'group_id' or 'pk' in the URL kwargs")
+
         group = get_object_or_404(Group, id=group_id)
         self.check_object_permissions(self.request, group)
+        
         contact = get_object_or_404(Contact, id=contact_id, group=group)
         return contact
-
 
 # todo
 # - Process email lists from csv, json

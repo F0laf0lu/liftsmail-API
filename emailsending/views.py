@@ -1,7 +1,7 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from emailcontacts.permissions import  IsGroupOwner
+from emailcontacts.permissions import  IsGroupOwner, IsOwner
 from emailsending.serializers import EmailSessionSerializer, EmailTemplatesSerializers, SendNowSerializer
 from emailsending.utils import format_email, send_email
 from .models import EmailSession, EmailTemplate
@@ -22,10 +22,10 @@ class EmailTemplatesListCreateApiView(generics.ListCreateAPIView):
 class EmailTemplateDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = EmailTemplate.objects.all()
     serializer_class = EmailTemplatesSerializers
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated,IsOwner]
 
-    def get_queryset(self):        
-        return EmailTemplate.objects.filter(user=self.request.user.id)
+    # def get_queryset(self):        
+    #     return EmailTemplate.objects.filter(user=self.request.user.id)
 
 
 class SendMailView(generics.CreateAPIView):

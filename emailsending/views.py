@@ -1,10 +1,9 @@
-import os
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from emailcontacts.permissions import  IsGroupOwner
 from emailsending.serializers import EmailSessionSerializer, EmailTemplatesSerializers, SendNowSerializer
-from emailsending.utils import format_email, send_email, generate_html_file_name
+from emailsending.utils import format_email, send_email
 from .models import EmailSession, EmailTemplate
 
 # Create your views here.

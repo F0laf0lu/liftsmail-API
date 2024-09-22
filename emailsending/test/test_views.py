@@ -1,9 +1,12 @@
+import os
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework import status
 from emailsending.models import EmailTemplate, EmailSession
 from emailcontacts.models import Group, Contact
 from django.urls import reverse
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'liftsmail.settings')
 
 User = get_user_model()
 
@@ -78,6 +81,8 @@ class SendEmailTests(BaseTestCase):
         response = self.client.post(self.send_email_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Emails sent successfully", response.data['message'])
+        sessions = EmailSession.objects.count()
+        print(sessions)
 
     def test_send_email_to_empty_group(self):
         # Create an empty group with no contacts

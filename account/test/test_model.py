@@ -1,7 +1,10 @@
+import os
 from django.db import IntegrityError
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from ..models import CustomUser
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'liftsmail.settings')
 
 class CustomUserManagerTests(TestCase):
 

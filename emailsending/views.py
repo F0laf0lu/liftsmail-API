@@ -57,6 +57,8 @@ class SendMailView(generics.CreateAPIView):
             }
             new_message = format_email(message, context)
             send_email(message=new_message, subject=subject, recipient=contact.email)
+            print(serializer.validated_data)
+            serializer.save()
         return Response({"message": "Emails sent successfully"})
 
 

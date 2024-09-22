@@ -28,6 +28,13 @@ class SendNowSerializer(serializers.ModelSerializer):
             user = request.user
             self.fields['group_id'].queryset = Group.objects.filter(user=user)
 
+    def create(self, validated_data):
+        session = validated_data.get('session', None)
+        group_id = validated_data['group_id']
+        user = self.context.get('request').user
+        EmailSession.objects.create(session=session, group_id=group_id, user=user)
+        return EmailSession
+
 
 class EmailSessionSerializer(serializers.ModelSerializer):
     class Meta:

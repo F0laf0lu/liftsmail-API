@@ -23,6 +23,6 @@ class EmailSession(TimeStampBaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     session = models.CharField(max_length=255, blank=True, null=True)
     group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
-    template_id = models.ForeignKey(EmailTemplate, on_delete=models.CASCADE)
+    template_id = models.ForeignKey(EmailTemplate, on_delete=models.CASCADE, null=True, blank=True)
     is_scheduled = models.BooleanField(default=False)
     schedule_time = models.DateTimeField(null=True, blank=True)

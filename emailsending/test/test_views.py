@@ -6,8 +6,6 @@ from emailsending.models import EmailTemplate, EmailSession
 from emailcontacts.models import Group, Contact
 from django.urls import reverse
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'liftsmail.settings')
-
 User = get_user_model()
 
 class BaseTestCase(APITestCase):
@@ -32,6 +30,7 @@ class BaseTestCase(APITestCase):
         self.templates_detail_url = reverse('email-template-detail', kwargs={"pk": self.template.pk})
         self.send_email_url = reverse('send-mail')
         self.sessions_url = reverse('email-sessions')
+        self.schedule_email_url = reverse('schedule-email')
 
         # Authentication
         self.client.force_authenticate(self.user)
@@ -48,7 +47,7 @@ class EmailTemplateTests(BaseTestCase):
         data = {
             "name":"New Template",
             "subject": "New Subject",
-            "body": "New Body"
+            "body": "New Body" 
         }
         response = self.client.post(self.templates_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -82,7 +81,7 @@ class SendEmailTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Emails sent successfully", response.data['message'])
         sessions = EmailSession.objects.count()
-        print(sessions)
+        self.assertEqual(sessions, 1)
 
     def test_send_email_to_empty_group(self):
         # Create an empty group with no contacts
@@ -122,3 +121,59 @@ class PermissionTests(BaseTestCase):
         url = reverse('email-template-detail', kwargs={"pk": other_template.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ScheduleEmailTests(BaseTestCase):
+    def test_correct_url(self):
+        url = self.schedule_email_url
+        self.assertEqual(url, '/api/v1/email/schedule/')
+
+    def test_serializer_validation_session_name(self):
+        data = {
+                "session": "",
+                "is_scheduled": True,
+                "schedule_time": "",
+                "group_id": self.group.id,
+                "template_id": ""
+            }
+        url = self.schedule_email_url
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_serializer_validation_no_contacts(self):
+        group = Group.objects.create(name="Test Group 2", user=self.user)
+        data = {
+                "session": "",
+                "is_scheduled": True,
+                "schedule_time": "",
+                "group_id": group.id,
+                "template_id": ""
+            }
+        url = self.schedule_email_url
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_serializer_validation_template(self):
+        group = Group.objects.create(name="Test Group 2", user=self.user)
+        data = {
+                "session": "Name",
+                "is_scheduled": True,
+                "schedule_time": "2024-09-24T11:32:00Z",
+                "group_id": group.id,
+                "template_id": ""
+            }
+        url = self.schedule_email_url
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_schedule_email(self):
+        data = {
+                "session": "First Session",
+                "schedule_time": "",
+                "group_id": self.group.id,
+                "template_id": self.template.id
+            }
+        url = self.schedule_email_url
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

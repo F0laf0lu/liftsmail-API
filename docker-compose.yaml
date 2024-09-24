@@ -1,0 +1,25 @@
+version: '3.9'
+
+services:
+  web:
+    container_name: liftmail
+    build: .
+    command: python /app/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+  
+  redis:
+    image: redis:latest
+
+  celery:
+    build: .
+    command: celery -A liftsmail worker --loglevel=info
+    working_dir: /app
+    volumes:
+      -  .:/app
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+

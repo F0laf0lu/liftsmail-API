@@ -2,7 +2,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from emailcontacts.permissions import  IsGroupOwner, IsOwner
-from emailsending.serializers import EmailSessionSerializer, EmailTemplatesSerializers, SendNowSerializer
+from emailsending.serializers import EmailSessionSerializer, EmailTemplatesSerializers, SendNowSerializer, ScheduleSerializer
 from emailsending.utils import format_email, send_email
 from .models import EmailSession, EmailTemplate
 
@@ -27,6 +27,13 @@ class EmailTemplateDetailView(generics.RetrieveUpdateDestroyAPIView):
     # def get_queryset(self):        
     #     return EmailTemplate.objects.filter(user=self.request.user.id)
 
+class EmailSessionView(generics.ListAPIView):
+    queryset  = EmailSession.objects.all()
+    serializer_class = EmailSessionSerializer
+    permission_classes = [IsAuthenticated, IsGroupOwner]
+
+    def get_queryset(self):
+        return EmailSession.objects.filter(user=self.request.user)
 
 class SendMailView(generics.CreateAPIView):
     serializer_class = SendNowSerializer
@@ -57,15 +64,40 @@ class SendMailView(generics.CreateAPIView):
             }
             new_message = format_email(message, context)
             send_email(message=new_message, subject=subject, recipient=contact.email)
-            print(serializer.validated_data)
-            serializer.save()
+        serializer.save()
         return Response({"message": "Emails sent successfully"})
 
+class ScheduleEmailView(generics.CreateAPIView):
+    serializer_class = ScheduleSerializer
+    permission_classes = [IsAuthenticated]
 
-class EmailSessionView(generics.ListAPIView):
-    queryset  = EmailSession.objects.all()
-    serializer_class = EmailSessionSerializer
-    permission_classes = [IsAuthenticated, IsGroupOwner]
 
-    def get_queryset(self):
-        return EmailSession.objects.filter(user=self.request.user)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # return super().post(request, *args, **kwargs)
+        return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        return super().perform_create(serializer)
+
+
+
+'''
+Schedule Email sending
+
+Description: To schedule the sending of an email at a later time
+That is, create a email session at a later time other than now
+
+- Create email session serializer with all fields including, is_scheduled and schedule_time
+- pick template from already created user template
+- pick the schedule time
+- create celery task 
+- send the task to celery
+- when celery executes the task create email session.
+'''
+
+
+# Ways to provide context to serializer

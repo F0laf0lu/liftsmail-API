@@ -170,10 +170,11 @@ class ScheduleEmailTests(BaseTestCase):
     def test_schedule_email(self):
         data = {
                 "session": "First Session",
-                "schedule_time": "",
+                "schedule_time": "2024-09-24T11:32:00Z",
                 "group_id": self.group.id,
                 "template_id": self.template.id
             }
         url = self.schedule_email_url
         response = self.client.post(url, data)
+        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

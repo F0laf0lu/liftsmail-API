@@ -22,4 +22,16 @@ services:
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
+  
+  celery-beat:
+    build: .
+    command: celery -A liftsmail beat -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - celery
+      - web
+
+
 

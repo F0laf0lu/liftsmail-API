@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from datetime import timedelta
 import os
+from datetime import timedelta
 from pathlib import Path
 from decouple import config
+import emailsending.tasks
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -153,3 +155,11 @@ SIMPLE_JWT = {
 CELERY_BROKER_URL = 'redis://redis:6379' 
 CELERY_RESULT_BACKEND = 'redis://redis:6379' 
 CELERY_TIMEZONE = 'UTC'
+
+
+CELERY_BEAT_SCHEDULE = {
+    "add" : {
+        "task": "emailsending.tasks.sample_task",
+        "schedule": crontab(minute="*/1")
+    }
+}

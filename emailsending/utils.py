@@ -47,7 +47,6 @@ def format_email(message, context):
         
         # Render the template with context
         rendered_content = render_to_string(filename, context)
-        print(rendered_content)
     
     finally:
         # Remove the temporary file

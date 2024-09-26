@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework',
     'drf_yasg',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -153,13 +155,6 @@ SIMPLE_JWT = {
 }
 
 CELERY_BROKER_URL = 'redis://redis:6379' 
-CELERY_RESULT_BACKEND = 'redis://redis:6379' 
-CELERY_TIMEZONE = 'UTC'
-
-
-CELERY_BEAT_SCHEDULE = {
-    "add" : {
-        "task": "emailsending.tasks.sample_task",
-        "schedule": crontab(minute="*/1")
-    }
-}
+# CELERY_RESULT_BACKEND = 'redis://redis:6379' 
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True

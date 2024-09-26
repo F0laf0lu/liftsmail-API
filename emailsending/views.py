@@ -1,8 +1,15 @@
+from datetime import timedelta
+import zoneinfo
+from django.utils.timezone import make_aware
+import json
+from django.utils.timezone import now
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from emailcontacts.permissions import  IsGroupOwner, IsOwner
+from django_celery_beat.models import CrontabSchedule, PeriodicTask, ClockedSchedule, IntervalSchedule
 from emailsending.serializers import EmailSessionSerializer, EmailTemplatesSerializers, SendNowSerializer, ScheduleSerializer
+from emailsending.tasks import send_email_task
 from emailsending.utils import format_email, send_email
 from .models import EmailSession, EmailTemplate
 
@@ -63,7 +70,8 @@ class SendMailView(generics.CreateAPIView):
                 "contact_id": contact.id
             }
             new_message = format_email(message, context)
-            send_email(message=new_message, subject=subject, recipient=contact.email)
+            # send_email(message=new_message, subject=subject, recipient=contact.email)
+            send_email_task.delay(message=new_message, subject=subject, recipient=contact.email)
         serializer.save()
         return Response({"message": "Emails sent successfully"})
 
@@ -71,13 +79,39 @@ class ScheduleEmailView(generics.CreateAPIView):
     serializer_class = ScheduleSerializer
     permission_classes = [IsAuthenticated]
 
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
-        # return super().post(request, *args, **kwargs)
-        return Response(serializer.data)
+        schedule_time = serializer.validated_data['schedule_time']
+        group = serializer.validated_data['group_id']
+        template = serializer.validated_data['template_id']
+        message = template.body
+        subject = template.subject
+        contacts = group.contacts.all()
+        for contact in contacts:
+            context = {
+                "first_name": contact.first_name if contact.first_name else "Guest",
+                'last_name': contact.last_name if contact.last_name else "Guest",
+                'email': contact.email,
+                "contact_id": contact.id
+            }
+            new_message = format_email(message, context)
+            schedule, _ = CrontabSchedule.objects.get_or_create(
+                        minute=schedule_time.minute,
+                        hour=schedule_time.hour,
+                        day_of_month=schedule_time.day,
+                        month_of_year=schedule_time.month,
+                        day_of_week=schedule_time.strftime('%w'),
+                        timezone=zoneinfo.ZoneInfo('Africa/Lagos')
+                        )
+            PeriodicTask.objects.create(
+                crontab = schedule,
+                name = f'mail_{contact.id}_{now().timestamp()}',
+                task = 'emailsending.tasks.send_email_task',
+                args = json.dumps([new_message, subject, contact.email]),
+                one_off = True,
+            )
+        return Response({"message": "Emails scheduled successfully"})
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

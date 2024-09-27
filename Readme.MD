@@ -3,6 +3,10 @@
 ## Overview
 This API built with django rest framework provides a set of RESTFUL endpoints for users to send bulk emails to their contacts. Users can create a group to which an email is to be sent. Sending of emails can be scheduled and the content customized as required.
 
+## Installation and Setup
+
+1. Clone the git repository 
+
 ## Running Tests
 
 Tests are organized into different files within the app's `tests` directory. Here's how to run them:

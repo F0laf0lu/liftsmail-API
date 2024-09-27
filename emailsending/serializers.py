@@ -49,8 +49,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             self.fields['template_id'].queryset = EmailTemplate.objects.filter(user=user)
             self.fields['group_id'].queryset = Group.objects.filter(user=user)
 
-
-
     def validate(self, attrs):
         session = attrs.get('session', None)
         template_id = attrs.get('template_id', None)

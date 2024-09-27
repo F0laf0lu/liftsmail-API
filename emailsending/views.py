@@ -70,7 +70,6 @@ class SendMailView(generics.CreateAPIView):
                 "contact_id": contact.id
             }
             new_message = format_email(message, context)
-            # send_email(message=new_message, subject=subject, recipient=contact.email)
             send_email_task.delay(message=new_message, subject=subject, recipient=contact.email)
         serializer.save()
         return Response({"message": "Emails sent successfully"})
@@ -116,7 +115,6 @@ class ScheduleEmailView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
         return super().perform_create(serializer)
-
 
 
 '''

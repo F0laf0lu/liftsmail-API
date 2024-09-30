@@ -1,9 +1,11 @@
 import os
+import zoneinfo
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 import tempfile
 import random
 import string
+
 
 def generate_html_file_name(identifier):
     """
@@ -71,3 +73,55 @@ def send_email(subject, message, recipient):
     )
     email.content_subtype = "html"
     email.send()
+
+
+def format_messages(subject, message, contact_list, sender_email):
+    """
+    Sends multiple emails to different contacts using Django's send_mass_mail.
+    """
+    messages = []
+    for contact in contact_list:
+        personalized_message = format_email(message, {
+            "first_name": contact['first_name'],
+            "last_name": contact['last_name'],
+            "email": contact['email'],
+            "contact_id": contact['id'],
+        })
+        
+        # Prepare the email tuple: (subject, message, from_email, [recipient_email])
+        email_tuple = (
+            subject,
+            personalized_message,
+            sender_email,  # Sender's email address
+            [contact['email']]  # List of recipients (in this case, one recipient)
+        )
+        messages.append(email_tuple)
+
+    return messages
+
+
+    # send_mass_mail(messages, fail_silently=False)
+
+from django.core.mail import send_mail
+
+def send_html_emails(subject, html_message, contact_list, sender_email):
+    """
+    Sends multiple emails with HTML content to different contacts using send_mail.
+    """
+    for contact in contact_list:
+        personalized_message = format_email(html_message, {
+            "first_name": contact['first_name'],
+            "last_name": contact['last_name'],
+            "email": contact['email'],
+            "contact_id": contact['id'],
+        })
+        
+        # Send the email with HTML content
+        send_mail(
+            subject=subject,
+            message=None,  # Plain text version (optional, leave as None if not required)
+            from_email=sender_email,  # Sender email address
+            recipient_list=[contact['email']],  # Recipient's email
+            fail_silently=False,
+            html_message=personalized_message  # Send HTML message
+        )

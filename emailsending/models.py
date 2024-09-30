@@ -24,5 +24,5 @@ class EmailSession(TimeStampBaseModel):
     session = models.CharField(max_length=255, blank=True, null=True)
     group_id = models.ForeignKey(Group, on_delete=models.CASCADE)
     template_id = models.ForeignKey(EmailTemplate, on_delete=models.CASCADE, null=True, blank=True)
-    is_scheduled = models.BooleanField(default=False)
+    one_off = models.BooleanField(default=False)  #this should ba one off task
     schedule_time = models.DateTimeField(null=True, blank=True)
